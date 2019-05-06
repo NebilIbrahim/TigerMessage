@@ -2,11 +2,13 @@ import spacy
 import nltk
 from nltk.corpus import wordnet
 
+#spacy.en.download.main()
+
 #nltk.download('wordnet')
 SUBJECTS = ["nsubj", "nsubjpass", "csubj", "csubjpass", "agent", "expl"]
 OBJECTS = ["dobj", "dative", "attr", "oprd"]
 
-nlp = spacy.load('en')
+nlp = spacy.load('en_core_web_sm')
 
 def tokenize_sentence(sentence1):
     doc1 = nlp(sentence1)
@@ -34,15 +36,19 @@ def sentence_closeness(sub1_toks, sub2_toks):
             counter += 1
 
     scores.sort(reverse=True)
-    return sum(scores[:min(3, len(scores))])/min(3, len(scores))
+    if len(scores) == 0:
+        return 0
+    top_scores = scores[:max(1, int(len(scores)/4))]
+    return sum(top_scores)/len(top_scores)
+    #return sum(scores[:min(3, len(scores))])/min(3, len(scores))
 
-#t11,t12 = (tokenize_sentence("I saw an elephant. It was a really cool day. I wouldn't reccomend going on a safari though."), tokenize_sentence("I saw an elephant when I went on a trip to in Africa! I didn't go on a safari though. Good to know that I didn't miss much"))
-#t21,t22 = (tokenize_sentence("I saw an elephant. It was a really cool day. I wouldn't reccomend going on a safari though."), tokenize_sentence("I love tacos. While lots of different foods are good, there's something about tacos that just hits the spot every time."))
-#t31,t32 = (tokenize_sentence("Today is taco tuesday! But sadly, I could only find burriots around."), tokenize_sentence("I love tacos. While lots of different foods are good, there's something about tacos that just hits the spot every time."))
-#  
-#print(sentence_closeness(t11,t12))
-#print(sentence_closeness(t21,t22))
-#print(sentence_closeness(t31,t32))
+t11,t12 = (tokenize_sentence("I saw an elephant. It was a really cool day. I wouldn't reccomend going on a safari though."), tokenize_sentence("I saw an elephant when I went on a trip to in Africa! I didn't go on a safari though. Good to know that I didn't miss much"))
+t21,t22 = (tokenize_sentence("I saw an elephant. It was a really cool day. I wouldn't reccomend going on a safari though."), tokenize_sentence("I love tacos. While lots of different foods are good, there's something about tacos that just hits the spot every time."))
+t31,t32 = (tokenize_sentence("Today is taco tuesday! But sadly, I could only find burriots around."), tokenize_sentence("I love tacos. While lots of different foods are good, there's something about tacos that just hits the spot every time."))
+
+print(sentence_closeness(t11,t12))
+print(sentence_closeness(t21,t22))
+print(sentence_closeness(t31,t32))
 
 # Produces the following output:
 #   0.9565217391304347

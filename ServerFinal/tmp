@@ -4,6 +4,7 @@ certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
 cymem==2.0.2
+en-core-web-sm==2.1.0
 Flask==1.0.2
 flask-cas-ng==1.1.0
 flask-heroku==0.1.9
@@ -39,4 +40,3 @@ urllib3==1.24.2
 wasabi==0.2.1
 Werkzeug==0.15.0
 xmltodict==0.12.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.1.0/en_core_web_sm-2.1.0.tar.gz

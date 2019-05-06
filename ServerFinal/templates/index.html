@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">  
   <body>
     <ul id="token"></ul>
-    <button id="new_chat"><-</button><button id="change_name">Rename</button>
+    <button id="new_chat"><-</button><button id="change_name">Rename</button><button id="restrict">Subject</button>
     <div class="w3-card-4">
       <header class="w3-container w3-light-grey">
         <h3 id="cur_chat"></h3>
@@ -78,6 +78,7 @@
           var token = -1;
           var username;
           var chat;
+          var restricted = false;
           $('form').submit(function(e){
               e.preventDefault(); // prevents page reloading
               socket.emit('chat message', $('#m').val(), username, chat); // getCookie("uid")
@@ -85,10 +86,18 @@
               return false;
           });
           $('#new_chat').click(function(){
-              location.href = "https://tmessage.herokuapp.com/";//socket.emit('new chat'); ATTN
+              location.href = "https://tmessage.herokuapp.com/"// "https://tmessage.herokuapp.com/";//socket.emit('new chat'); ATTN
           });
           $('#change_name').click(function(){
               socket.emit('change cname', chat, prompt("What's the new name?", ""));
+          });
+          $('#restrict').click(function() {
+              if (!restricted) {
+                  socket.emit('restrict', chat, prompt("Which subject do you want to restrict to?", ""));
+                  restricted = true;}
+              else {
+                  socket.emit('unrestrict', chat);
+                  restricted = false;}
           });
           socket.on('disp', function(toDisp){
               alert(toDisp);
@@ -114,6 +123,10 @@
           });
           socket.on('confirm', function(chat_name){
               $('#cur_chat').html(chat_name);
+          });
+          socket.on('clear', function() {
+              while ($('div.w3-panel').length > 0)
+                  $('#messages').find('div').first().remove();
           });
       });
       </script>

@@ -16,7 +16,7 @@ cas = CAS(app)
 app.config['CAS_SERVER'] = 'https://fed.princeton.edu/cas/' 
 app.config['CAS_AFTER_LOGIN'] = 'index'
 app.config['SECRET_KEY'] = 'super secret thingy'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/pre-registration'#os.environ['DATABASE_URL']#'postgresql://localhost/pre-registration'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']#'postgresql://localhost/pre-registration'
 io = SocketIO(app)
 heroku = Heroku(app)
 db = SQLAlchemy(app)
@@ -75,26 +75,45 @@ def on_confirm(tok, username, chat_name):
     clients.append(request.sid)
     usernames.append(username)
     chat.append(chat_name)
+    io.emit('clear', room=request.sid)
     uids.append(dbopsAttempt.update_user_table("foo", username))
-    for (mid, msg, u, tsmp) in dbopsAttempt.get_messages(str(chat_name)): ## THIS HAS TO BE EVENTUALLY CHANGED
-        io.emit('chat message', data=(u, msg), room=request.sid)
+    for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat_name)): ## THIS HAS TO BE EVENTUALLY CHANGED
+        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTN
     io.emit('confirm', dbopsAttempt.get_chat_name(chat_name), room=request.sid)
+
+@io.on('restrict')
+def on_restrict(chat, restrict_to):
+    print("FOOOBARB")
+    io.emit('clear', room=request.sid)
+    print(dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)))
+    for (mid, msg, u, tsmp, g) in dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)):
+        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTNio.emit(
+    io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
+
+@io.on('unrestrict')
+def on_unrestrict(chat):
+    io.emit('clear', room=request.sid)
+    for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat)):
+        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTNio.emit(
+    io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
 
 @io.on('disconnect')
 def on_disconnect():
     print("user disconnected")
-    index = clients.index(request.sid)
-    del clients[index]
-    del usernames[index]
-    del chat[index]
+    #index = clients.index(request.sid)
+    #del clients[index]
+    #del usernames[index]
+    #del chat[index]
     #clients.remove(request.sid)
 
 @io.on('chat message')
 def on_message(msg, user, which_chat):
     print("GOT A MESSAGE!")
     index = clients.index(request.sid)
-    print("Message from user %s in chat %s" % (usernames[index], chat[index]))
-    dbopsAttempt.insert_message(msg, str(chat[index]), usernames[index])
+    print("Message from user %s in chat %s" % (user, which_chat))#(usernames[index], chat[index]))
+    #print(which_chat)
+    #dbopsAttempt.insert_message(msg, str(chat[index]), usernames[index])
+    dbopsAttempt.insert_message(msg, str(which_chat), user)
     print(len(clients))
     # PROBLEM
     for i in range(len(clients)):
@@ -134,5 +153,5 @@ if __name__ == '__main__':
     #dbopsAttempt.add_chat("TEST CHAT")
     io.run(app,
            port=int(os.environ.get('PORT', 5000)),
-           #host='0.0.0.0',
+           host='0.0.0.0',
            debug=False)
