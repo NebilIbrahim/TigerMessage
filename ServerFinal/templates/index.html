@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tiger Message!</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">  
+  <body>
+    <ul id="token"></ul>
+    <button id="new_chat"><-</button><button id="change_name">Rename</button>
+    <div class="w3-card-4">
+      <header class="w3-container w3-light-grey">
+        <h3 id="cur_chat"></h3>
+      </header>
+      <div class="w3-container">
+        <div id="messages" style="overflow:auto;height:85vh;"></div>
+      </div>
+    </div>
+    <form id="form" action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      function setCookie(cname, cvalue, exdays) {
+          var d = new Date();
+          d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+          var expires = "expires="+d.toUTCString();
+          document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+      }
+
+      function getCookie(cname) {
+          var name = cname + "=";
+          var decodedCookie = decodeURIComponent(document.cookie);
+          var ca = decodedCookie.split(';');
+          for(var i = 0; i <ca.length; i++) {
+              var c = ca[i];
+              while (c.charAt(0) == ' ') {
+                  c = c.substring(1);
+              }
+              if (c.indexOf(name) == 0) {
+                  return c.substring(name.length, c.length);
+              }
+          }
+          return "";
+      }
+
+      function checkCookie() {
+          var username = getCookie("uid");
+          if (username != "") {
+              alert("Welcome again " + username);
+          } else {
+              username = prompt("Please enter your name:", "");
+              if (username != "" && username != null) {
+                  setCookie("uid", username, 0.01);
+              }
+          }
+      }
+
+      function formatMessage(user, msg, mine) {
+          if (mine)
+              return "<div class=\"w3-row\"><div class=\"w3-panel w3-third\"></div><div class=\"w3-panel w3-light-blue w3-round-xlarge w3-rest\">" + user + ": " + msg + "</div></div>";
+          else
+              return "<div class=\"w3-row\"><div class=\"w3-panel w3-twothird w3-light-grey w3-round-xlarge\">" + user + ": " + msg + "</div></div>";
+      }
+
+      $(function () {
+          var socket = io();
+          var token = -1;
+          var username;
+          var chat;
+          $('form').submit(function(e){
+              e.preventDefault(); // prevents page reloading
+              socket.emit('chat message', $('#m').val(), username, chat); // getCookie("uid")
+              $('#m').val('');
+              return false;
+          });
+          $('#new_chat').click(function(){
+              location.href = "https://tmessage.herokuapp.com/";//socket.emit('new chat'); ATTN
+          });
+          $('#change_name').click(function(){
+              socket.emit('change cname', chat, prompt("What's the new name?", ""));
+          });
+          socket.on('disp', function(toDisp){
+              alert(toDisp);
+          });
+          socket.on('chat message', function(sender, msg){
+              $('#messages').append(formatMessage(sender, msg, (sender == username)));
+              $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                  //animate({ scrollTop: $('#messages').prop("scrollHeight")}, 1000);
+              //console.log("**" + $('div.w3-panel').length.toString());
+              if ($('div.w3-panel').length > 30)
+                  $('#messages').find('div').first().remove();
+              //$('#messages').append($('<li>').text(msg)); // TO CHANGE
+          });
+          socket.on('token', function(tok){
+              token = tok;
+              //checkCookie();
+              //setCookie("uid", '{{username}}', 0.5);
+              //username = getCookie("uid");//prompt("Please enter your name:", "");
+              username = '{{username}}' // Temp
+              chat = '{{to_chat}}'//prompt("Which chat do you want to access?", "");
+              socket.emit('confirm', tok, username, chat);
+              $('#token').insideHTML = tok;
+          });
+          socket.on('confirm', function(chat_name){
+              $('#cur_chat').html(chat_name);
+          });
+      });
+      </script>
+  </body>
+</html>

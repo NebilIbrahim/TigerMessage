@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tiger Message!</title>
+    <style>
+      form button { width: 100%; background: rgb(120, 120, 140); border: none; padding: 10px; }
+    </style>
+  </head>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <body>
+    <button id="new_chat">+</button>
+    <div id="chatlist">
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <div class="w3-card-4" style="overflow:auto;height:95vh">
+      <header class="w3-container w3-light-grey">
+        <h3 id="cur_chat">Pick a Chat To Message In</h3>
+      </header>
+      <div class="w3-container">
+        {% for id,name in mah_chats %}
+        <form method="post" action="">
+          <input type="hidden" name="to_chat" value="{{id}}">
+          <button type="submit" name="submit_{{id}}" value="Submit" class="link-button">
+            {{name}}
+          </button>
+        </form>
+        <p>
+          {% endfor %}
+      </div>
+    </div>
+    <script>
+      $(function () {
+          var socket = io();
+          var username = '{{username}}';
+          $('#new_chat').click(function(){
+              var name = prompt("What's the new chat's name?", "");
+              var membersStr = prompt ("NetID's of members? (e.g. \'johnd, janed, ...\')", "");
+              var members = membersStr.split(",").map(function (s) {return s.trim()});
+              members.push(username)
+              socket.emit('new chat', name, ...members);
+          });
+
+          socket.on('refresh', function() {
+              location.href = "https://tmessage.herokuapp.com/"; // ATTN this is terrible
+          });
+      });
+    </script>
+  </body>
+</html>
