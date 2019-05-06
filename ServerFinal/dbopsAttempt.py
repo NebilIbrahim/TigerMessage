@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 # cur =
 en = 0
 
+
 def next_cid():
     global en
 
@@ -14,6 +15,7 @@ def next_cid():
     en.execute("UPDATE cur_cid SET cid = cid + 1 WHERE cid = %s", (cur_cid,))
     print(cur_cid, "***")
     return cur_cid
+
 
 # Make a new chat table whose name is its chat id (cid) and whose columns are
 # message id, message, sender, and timestamp
@@ -27,7 +29,7 @@ def setup_chat_table(chatName, membersIds):
     # Check if cid exist already with member
 
     # Make sure lists are of same length
-    #if (len(membersNames) != len(membersIds)):
+    # if (len(membersNames) != len(membersIds)):
     #    print("Mmmmmm check that again.... in setup_chat_table")
     #    print("The length of membersNames = " + str(len(membersNames)))
     #    print("The length of memebersIds = " + str(len(membersIds)))
@@ -41,12 +43,14 @@ def setup_chat_table(chatName, membersIds):
 
     # Add each member chat pair Ex: (314159, QuadChat, Nebil Ibrahim) (314159, QuadChat, Emmerson) ...
     for i in range(0, len(membersIds)):
-        #memberName = (AsIs(membersNames[i]),)
-        #memberId = (AsIs(membersIds[i]),)
+        # memberName = (AsIs(membersNames[i]),)
+        # memberId = (AsIs(membersIds[i]),)
         add_chat(cid, membersIds[i])
         en.execute("INSERT INTO chats_table VALUES (%s, %s, %s, %s)", (cid, chatName, membersIds[i], membersIds[i]))
 
     # en.execute("INSERT INTO mids VALUES (0)")
+
+
 ##    conn.commit()
 
 
@@ -64,6 +68,7 @@ def add_chat(cid, uid):
 
     en.execute("INSERT INTO %s VALUES (%s, NOW(), FALSE)", (uidInsert, cid))
 
+
 #    conn.commit()
 
 
@@ -74,6 +79,8 @@ def init_chats_table():
     global en
     global cur
     en.execute("CREATE TABLE IF NOT EXISTS chats_table (cid INTEGER, chatName TEXT, uid TEXT, name TEXT)", )
+
+
 #    conn.commit()
 
 
@@ -82,6 +89,8 @@ def init_user_table():
     global en
     global cur
     en.execute("CREATE TABLE IF NOT EXISTS user_table (uid TEXT, name TEXT, lastlogin TIMESTAMP)", )
+
+
 #    conn.commit()
 
 
@@ -103,6 +112,7 @@ def update_user_table(uid, name):
     en.execute("DELETE FROM user_table WHERE uid = %s", (uid,))
     en.execute("INSERT INTO user_table VALUES (%s, %s, NOW())", (uid, name))
 
+
 #    conn.commit()
 
 
@@ -114,6 +124,8 @@ def init_name_table(uid):
 
     uidInsert = (AsIs(uid),)
     en.execute("CREATE TABLE IF NOT EXISTS %s (cid INTEGER, timestamp TIMESTAMP, readLastMessage BOOLEAN)", uidInsert)
+
+
 #    conn.commit()
 
 
@@ -128,6 +140,7 @@ def message_read(cid, uid):
 
     en.execute("UPDATE %s SET readLastMessage = TRUE WHERE cid = %s", uidInsert, cidInsert)
 
+
 # Add message to the specfic chat table and update for each user in group that they have not read the last message
 def insert_message(message, cid, sender):
     global conn
@@ -137,6 +150,7 @@ def insert_message(message, cid, sender):
     messageInsert = (AsIs(message),)
     senderInsert = (AsIs(sender),)
     en.execute("INSERT INTO %s(message, sender, timestamp) VALUES(%s, %s, NOW())", (cidInsert, message, sender))
+
 
 def get_chat_name(cid):
     global conn
@@ -156,11 +170,13 @@ def change_chat_name(chatName, cid):
     cidInsert = (AsIs(cid),)
     en.execute("UPDATE chats_table SET chatName = %s WHERE cid = %s", (chatName, cid))
 
+
 def clear_db():
     global en
 
-    try: # Only uncomment in non-heroku environment
-        rows = en.execute("SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_schema,table_name").fetchall()
+    try:  # Only uncomment in non-heroku environment
+        rows = en.execute(
+            "SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_schema,table_name").fetchall()
         for row in rows:
             print("dropping table: ", row[1])
             en.execute("drop table " + row[1] + " cascade")
@@ -175,8 +191,8 @@ def init_db(engine):
     global cur
 
     en = engine
-    
-    #clear_db()
+
+    # clear_db()
 
     en.execute("CREATE SCHEMA IF NOT EXISTS public")
     en.execute("CREATE TABLE IF NOT EXISTS cur_cid (cid INTEGER)")
@@ -193,17 +209,19 @@ def get_messages(cid):
     global conn
     global en
     global cur
- 
+
     cidInsert = (AsIs(str_cid(cid)),)
     return en.execute("SELECT * FROM %s", cidInsert).fetchall()
+
 
 def get_chats(uid):
     global conn
     global en
     global cur
 
-    uidInsert = (AsIs(str_cid(uid)), )
+    uidInsert = (AsIs(str_cid(uid)),)
     return en.execute("SELECT * FROM %s", uidInsert).fetchall()
+
 
 def get_members(cid):
     global conn
@@ -213,13 +231,15 @@ def get_members(cid):
     cidInsert = (AsIs(str_cid(cid)),)
     return en.execute("SELECT uid FROM chats_table WHERE cid = %s", (AsIs(cid),)).fetchall()
 
+
 def is_member(cid, uid):
     members = get_members(cid)
-    print(members) # 1029
+    print(members)  # 1029
     for (usr,) in members:
         if usr == uid:
             return True
     return False
+
 
 # Return a tuple of chat IDs and chat names in descending order of relevancy
 def sort_chats(uid):
@@ -235,12 +255,23 @@ def sort_chats(uid):
 
     return chat_names
 
+# Remove an individual from a chat given a chat ID and a university ID
+def leave_chat(cid, uid):
+    global conn
+    global en
+    global cur
+
+    en.execute('DELETE FROM %s WHERE cid = %s', (uid, cid))
+    en.execute('DELETE from chats_table WHERE cid = %s AND uid = %s', (uid, cid))
+
+
 # They call me Bobby Tables
 def drop_all_tables():
     global conn
     global en
     global cur
     en.execute("DROP SCHEMA public CASCADE")
+
 
 def close_db():
     cur.close()
