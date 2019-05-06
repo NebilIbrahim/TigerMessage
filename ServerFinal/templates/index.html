@@ -105,11 +105,15 @@
               alert(toDisp);
           });
           socket.on('chat message', function(sender, msg){
-              $('#messages').append(formatMessage(sender, msg, (sender == username)));
+              var exp = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+              var regex = new RegExp(exp);
+              var msgs = msg.split(/[ ]+/).map(x => ((x.match(regex)) ? ((x.endsWith(".png") || x.endsWith(".jpg") || x.endsWith(".gif")) ? "<img src=\"" + (x.startsWith("www") ? "http:////" + x : x) + "\" height=\"300\">" + "</img>" : "<a href=\"" + (x.startsWith("www") ? "http:////" + x : x) + "\">" + x + "</a>") : x));
+              var msgf = msgs.join(" ");
+              $('#messages').append(formatMessage(sender, msgf, (sender == username)));
               $('#messages').scrollTop($('#messages')[0].scrollHeight);
                   //animate({ scrollTop: $('#messages').prop("scrollHeight")}, 1000);
               //console.log("**" + $('div.w3-panel').length.toString());
-              if ($('div.w3-panel').length > 30)
+              if ($('div.w3-panel').length > 50)
                   $('#messages').find('div').first().remove();
               //$('#messages').append($('<li>').text(msg)); // TO CHANGE
           });
