@@ -93,7 +93,9 @@
           });
           $('#restrict').click(function() {
               if (!restricted) {
-                  socket.emit('restrict', chat, prompt("Which subject do you want to restrict to?", ""));
+                  var subjectsStr = prompt("Which subject do you want to restrict to?", "");
+                  var subjects = subjectsStr.split(",").map(function (s) {return s.trim()});
+                  socket.emit('restrict', chat, ...subjects);
                   restricted = true;}
               else {
                   socket.emit('unrestrict', chat);

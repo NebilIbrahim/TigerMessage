@@ -197,7 +197,11 @@ def insert_message(message, cid, sender):
             if closeness > max_cmp:
                 max_cmp = closeness
                 max_match = j
-        if empty:
+        if len(key_word_set) == 0:
+            print("FOOO")
+            en.execute("UPDATE %s SET category = %s WHERE mid = %s", (cidInsert, -1, m))
+            groupless.append(m)
+        elif empty:
             print("fo***")
             empty = False
             groups.append([m])
@@ -206,10 +210,6 @@ def insert_message(message, cid, sender):
             print("foo")
             groups[max_match].append(m)
             en.execute("UPDATE %s SET category = %s WHERE mid = %s", (cidInsert, max_match, m))
-        #elif max_cmp <= 0.1:
-        #    print("FOOO")
-        #    en.execute("UPDATE %s SET category = %s WHERE mid = %s", (cidInsert, -1, m))
-        #    groupless.append(m)
         elif len(empty_groups) > 0 and max_cmp < 0.5: # ATTN hard-coded values
             print("bar")
             print(empty_groups[0])
@@ -261,7 +261,7 @@ def init_db(engine):
 
     en = engine
     
-    #clear_db()
+    clear_db()
 
     en.execute("CREATE SCHEMA IF NOT EXISTS public")
     en.execute("CREATE TABLE IF NOT EXISTS cur_cid (cid INTEGER)")
@@ -327,6 +327,15 @@ def sort_chats(uid):
         chat_names.append((cid, get_chat_name(cid)))
 
     return chat_names
+
+def cat_message_words(cid, cat):
+    global en
+    mid_w = en.execute("SELECT mid from %s WHERE category = %s ORDER BY mid DESC", (AsIs(str_cid(cid)), cat)).fetchone()
+    if mid_w is None:
+        return []
+    (mid,) = mid_w
+    words = [word for (word,) in en.execute("SELECT word FROM %s WHERE mid = %s", (AsIs(str_cid(cid)+"words"),mid)).fetchall()]
+    return words
 
 # They call me Bobby Tables
 def drop_all_tables():

@@ -9,6 +9,7 @@ from flask_cas import login_required
 from flask_heroku import Heroku
 
 import dbopsAttempt
+import mlops
 
 app = Flask(__name__)
 cas = CAS(app)
@@ -82,9 +83,17 @@ def on_confirm(tok, username, chat_name):
     io.emit('confirm', dbopsAttempt.get_chat_name(chat_name), room=request.sid)
 
 @io.on('restrict')
-def on_restrict(chat, restrict_to):
+def on_restrict(chat, *words):
     print("FOOOBARB")
     io.emit('clear', room=request.sid)
+    restrict_to = 0
+    max_cmp = 0.0
+    for c in range(10):
+        closeness = mlops.sentence_closeness(words, dbopsAttempt.cat_message_words(chat, c))
+        if closeness > max_cmp:
+            print("ASDFASDFASDF ", closeness, c)
+            restrict_to = c
+            max_cmp = closeness
     print(dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)))
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)):
         io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTNio.emit(
@@ -115,9 +124,12 @@ def on_message(msg, user, which_chat):
     #dbopsAttempt.insert_message(msg, str(chat[index]), usernames[index])
     dbopsAttempt.insert_message(msg, str(which_chat), user)
     print(len(clients))
+    #io.emit('clear', room=request.sid)
+    #for (mid, mesg, u, tsmp, g) in dbopsAttempt.get_messages(str(which_chat)): ## THIS HAS TO BE EVENTUALLY CHANGED
+    #    io.emit('chat message', data=(u, str(g) + "| " + mesg), room=request.sid) ## ATTN
     # PROBLEM
     for i in range(len(clients)):
-        if chat[i] == which_chat:
+        if chat[i] == which_chat:# and clients[i] != request.sid:
             io.emit('chat message', data=(user, msg), room=clients[i])
 
 @io.on('new chat')
@@ -137,6 +149,9 @@ def change_chat_name(cid, new_name):
     for i in range(len(clients)):
         if chat[i] == cid:
             io.emit('confirm', new_name, room=clients[i])
+
+def reset_db():
+    dbopsAttempt.clear_db()
 
 memIds = ['nbi', 'bwk', 'esthomas', 'nathanl']
 memNames = ['Nebil Ibrahim', "Brian Kernighan", 'Emerson Thomas', 'Nathan Lovett-Genovese' ]
