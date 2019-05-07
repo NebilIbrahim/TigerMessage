@@ -17,7 +17,7 @@ cas = CAS(app)
 app.config['CAS_SERVER'] = 'https://fed.princeton.edu/cas/' 
 app.config['CAS_AFTER_LOGIN'] = 'index'
 app.config['SECRET_KEY'] = 'super secret thingy'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']#'postgresql://localhost/pre-registration'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/pre-registration'#os.environ['DATABASE_URL']#'postgresql://localhost/pre-registration'
 io = SocketIO(app)
 heroku = Heroku(app)
 db = SQLAlchemy(app)
@@ -168,5 +168,5 @@ if __name__ == '__main__':
     #dbopsAttempt.add_chat("TEST CHAT")
     io.run(app,
            port=int(os.environ.get('PORT', 5000)),
-           host='0.0.0.0',
+           #host='0.0.0.0',
            debug=False)
