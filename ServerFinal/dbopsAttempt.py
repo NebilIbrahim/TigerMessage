@@ -5,9 +5,11 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from flask_sqlalchemy import SQLAlchemy
 
 import mlops
+
 # conn = 0
 # cur =
 en = 0
+
 
 def next_cid():
     global en
@@ -16,6 +18,7 @@ def next_cid():
     en.execute("UPDATE cur_cid SET cid = cid + 1 WHERE cid = %s", (cur_cid,))
     print(cur_cid, "***")
     return cur_cid
+
 
 # Make a new chat table whose name is its chat id (cid) and whose columns are
 # message id, message, sender, and timestamp
@@ -29,7 +32,7 @@ def setup_chat_table(chatName, membersIds):
     # Check if cid exist already with member
 
     # Make sure lists are of same length
-    #if (len(membersNames) != len(membersIds)):
+    # if (len(membersNames) != len(membersIds)):
     #    print("Mmmmmm check that again.... in setup_chat_table")
     #    print("The length of membersNames = " + str(len(membersNames)))
     #    print("The length of memebersIds = " + str(len(membersIds)))
@@ -46,12 +49,14 @@ def setup_chat_table(chatName, membersIds):
 
     # Add each member chat pair Ex: (314159, QuadChat, Nebil Ibrahim) (314159, QuadChat, Emmerson) ...
     for i in range(0, len(membersIds)):
-        #memberName = (AsIs(membersNames[i]),)
-        #memberId = (AsIs(membersIds[i]),)
+        # memberName = (AsIs(membersNames[i]),)
+        # memberId = (AsIs(membersIds[i]),)
         add_chat(cid, membersIds[i])
         en.execute("INSERT INTO chats_table VALUES (%s, %s, %s, %s)", (cid, chatName, membersIds[i], membersIds[i]))
 
     # en.execute("INSERT INTO mids VALUES (0)")
+
+
 ##    conn.commit()
 
 
@@ -69,6 +74,7 @@ def add_chat(cid, uid):
 
     en.execute("INSERT INTO %s VALUES (%s, NOW(), FALSE)", (uidInsert, cid))
 
+
 #    conn.commit()
 
 
@@ -79,6 +85,8 @@ def init_chats_table():
     global en
     global cur
     en.execute("CREATE TABLE IF NOT EXISTS chats_table (cid INTEGER, chatName TEXT, uid TEXT, name TEXT)", )
+
+
 #    conn.commit()
 
 
@@ -86,13 +94,15 @@ def init_user_table():
     global conn
     global en
     global cur
-    en.execute("CREATE TABLE IF NOT EXISTS user_table (uid TEXT, name TEXT, lastlogin TIMESTAMP)", )
+    en.execute("CREATE TABLE IF NOT EXISTS user_table (uid TEXT, name TEXT, lastlogin TIMESTAMP, profileImage TEXT)", )
+
+
 #    conn.commit()
 
 
 # Insert new user or update their login time
 # (nbi, Nebil Ibrahim, March 14, 2019 12:49:43 PM)
-def update_user_table(uid, name):
+def update_user_table(uid, name, profileImage):
     global conn
     global en
     global cur
@@ -101,12 +111,19 @@ def update_user_table(uid, name):
     # loginTimeInsert = (AsIs(loginTime),)
 
     # If they are not a new user just update their most recent login. Else insert them into the
-    en.execute("CREATE TABLE IF NOT EXISTS user_table (uid TEXT, name TEXT, lastlogin TIMESTAMP)")
+    en.execute("CREATE TABLE IF NOT EXISTS user_table (uid TEXT, name TEXT, lastlogin TIMESTAMP, profileImage TEXT)")
     # en.execute("IF EXISTS UPDATE user_table SET lastlogin = NOW() WHERE uid = %s ", uidInsert)
     # en.execute("ELSE INSERT INTO user_table(uid, name, lastlogin) VALUES(%s, %s, NOW())", uidInsert, nameInsert)
     # ON CONFLICT UNIQUE (uid) DO UPDATE SET lastlogin = NOW()
     en.execute("DELETE FROM user_table WHERE uid = %s", (uid,))
-    en.execute("INSERT INTO user_table VALUES (%s, %s, NOW())", (uid, name))
+    en.execute("INSERT INTO user_table VALUES (%s, %s, NOW(), %s)", (uid, name, profileImage))
+
+def update_profile_image(uid, profileImage):
+    global conn
+    global en
+    global cur
+
+    en.execute("UPDATE user_table SET profileImage = %s WHERE uid = %s", (uid, profileImage))
 
 #    conn.commit()
 
@@ -119,6 +136,8 @@ def init_name_table(uid):
 
     uidInsert = (AsIs(uid),)
     en.execute("CREATE TABLE IF NOT EXISTS %s (cid INTEGER, timestamp TIMESTAMP, readLastMessage BOOLEAN)", uidInsert)
+
+
 #    conn.commit()
 
 
@@ -132,6 +151,7 @@ def read_message(cid, uid):
 
     en.execute("UPDATE %s SET readLastMessage = TRUE WHERE cid = %s", (AsIs(uid), AsIs(cid)))
 
+
 def has_been_read(cid, uid):
     global conn
     global cur
@@ -142,6 +162,7 @@ def has_been_read(cid, uid):
     (status,) = en.execute("SELECT readLastMessage FROM %s WHERE cid = %s", (AsIs(uid), AsIs(cid))).fetchone()
     return status
 
+
 # Add message to the specfic chat table and update for each user in group that they have not read the last message
 def insert_message(message, cid, sender):
     global conn
@@ -150,8 +171,9 @@ def insert_message(message, cid, sender):
     cidInsert = AsIs(str_cid(cid))
     messageInsert = (AsIs(message),)
     senderInsert = (AsIs(sender),)
-    en.execute("INSERT INTO %s(message, sender, timestamp, category) VALUES(%s, %s, NOW(), -2)", (cidInsert, message, sender))
-    (mid,) = en.execute("SELECT mid FROM %s WHERE message=%s", (cidInsert,message)).fetchall()[-1]
+    en.execute("INSERT INTO %s(message, sender, timestamp, category) VALUES(%s, %s, NOW(), -2)",
+               (cidInsert, message, sender))
+    (mid,) = en.execute("SELECT mid FROM %s WHERE message=%s", (cidInsert, message)).fetchall()[-1]
     for tok in mlops.tokenize_sentence(message):
         print(str(tok))
         en.execute("INSERT INTO %s VALUES (%s, %s)", (AsIs(str_cid(cid) + "words"), mid, str(tok)))
@@ -159,7 +181,8 @@ def insert_message(message, cid, sender):
     recent_mids = mids[max(-20, -len(mids)):-1]
     key_words = []
     for (m,) in recent_mids:
-        key_words.append([x for (x,) in en.execute("SELECT word FROM %s WHERE mid=%s", (AsIs(str_cid(cid) + "words"),m)).fetchall()])
+        key_words.append([x for (x,) in
+                          en.execute("SELECT word FROM %s WHERE mid=%s", (AsIs(str_cid(cid) + "words"), m)).fetchall()])
     print(key_words)
 
     groups = [[] for i in range(10)]
@@ -210,7 +233,7 @@ def insert_message(message, cid, sender):
             print("foo")
             groups[max_match].append(m)
             en.execute("UPDATE %s SET category = %s WHERE mid = %s", (cidInsert, max_match, m))
-        elif len(empty_groups) > 0 and max_cmp < 0.5: # ATTN hard-coded values
+        elif len(empty_groups) > 0 and max_cmp < 0.5:  # ATTN hard-coded values
             print("bar")
             print(empty_groups[0])
             en.execute("UPDATE %s SET category = %s WHERE mid = %s", (cidInsert, empty_groups[0], m))
@@ -222,6 +245,7 @@ def insert_message(message, cid, sender):
             groups[max_match].append(m)
     print(groups)
     print("*|*")
+
 
 def get_chat_name(cid):
     global conn
@@ -241,11 +265,13 @@ def change_chat_name(chatName, cid):
     cidInsert = (AsIs(cid),)
     en.execute("UPDATE chats_table SET chatName = %s WHERE cid = %s", (chatName, cid))
 
+
 def clear_db():
     global en
 
-    try: # Only uncomment in non-heroku environment
-        rows = en.execute("SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_schema,table_name").fetchall()
+    try:  # Only uncomment in non-heroku environment
+        rows = en.execute(
+            "SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_schema,table_name").fetchall()
         for row in rows:
             print("dropping table: ", row[1])
             en.execute("drop table " + row[1] + " cascade")
@@ -260,7 +286,7 @@ def init_db(engine):
     global cur
 
     en = engine
-    
+
     clear_db()
 
     en.execute("CREATE SCHEMA IF NOT EXISTS public")
@@ -280,23 +306,27 @@ def get_messages(cid):
     global conn
     global en
     global cur
- 
+
     cidInsert = AsIs(str_cid(cid))
     print(en.execute("SELECT * FROM %s ORDER BY mid", (cidInsert,)).fetchall())
     return en.execute("SELECT * FROM %s ORDER BY mid", (cidInsert,)).fetchall()
 
+
 def get_subject_messages(cid, cat):
     global en
     cidInsert = AsIs(str_cid(cid))
-    return en.execute("SELECT * FROM %s WHERE category = %s OR category < 0 ORDER BY mid", (cidInsert, str(cat))).fetchall()
+    return en.execute("SELECT * FROM %s WHERE category = %s OR category < 0 ORDER BY mid",
+                      (cidInsert, str(cat))).fetchall()
+
 
 def get_chats(uid):
     global conn
     global en
     global cur
 
-    uidInsert = (AsIs(str_cid(uid)), )
+    uidInsert = (AsIs(str_cid(uid)),)
     return en.execute("SELECT * FROM %s", uidInsert).fetchall()
+
 
 def get_members(cid):
     global conn
@@ -306,13 +336,15 @@ def get_members(cid):
     cidInsert = (AsIs(str_cid(cid)),)
     return en.execute("SELECT uid FROM chats_table WHERE cid = %s", (AsIs(cid),)).fetchall()
 
+
 def is_member(cid, uid):
     members = get_members(cid)
-    print(members) # 1029
+    print(members)  # 1029
     for (usr,) in members:
         if usr == uid:
             return True
     return False
+
 
 # Return a tuple of chat IDs and chat names in descending order of relevancy
 def sort_chats(uid):
@@ -328,6 +360,7 @@ def sort_chats(uid):
 
     return chat_names
 
+
 def cat_message_words(cid, cat):
     global en
     mid_w = en.execute("SELECT mid from %s WHERE category = %s ORDER BY mid DESC", (AsIs(str_cid(cid)), cat)).fetchall()
@@ -336,8 +369,10 @@ def cat_message_words(cid, cat):
     mid_slice = mid_w[:min(5, len(mid_w) - 1)]
     words = []
     for (mid,) in mid_slice:
-        words += [word for (word,) in en.execute("SELECT word FROM %s WHERE mid = %s", (AsIs(str_cid(cid)+"words"),mid)).fetchall()]
+        words += [word for (word,) in
+                  en.execute("SELECT word FROM %s WHERE mid = %s", (AsIs(str_cid(cid) + "words"), mid)).fetchall()]
     return words
+
 
 # They call me Bobby Tables
 def drop_all_tables():
@@ -345,6 +380,7 @@ def drop_all_tables():
     global en
     global cur
     en.execute("DROP SCHEMA public CASCADE")
+
 
 def close_db():
     cur.close()
