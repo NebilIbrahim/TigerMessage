@@ -330,11 +330,13 @@ def sort_chats(uid):
 
 def cat_message_words(cid, cat):
     global en
-    mid_w = en.execute("SELECT mid from %s WHERE category = %s ORDER BY mid DESC", (AsIs(str_cid(cid)), cat)).fetchone()
-    if mid_w is None:
+    mid_w = en.execute("SELECT mid from %s WHERE category = %s ORDER BY mid DESC", (AsIs(str_cid(cid)), cat)).fetchall()
+    if len(mid_w) == 0:
         return []
-    (mid,) = mid_w
-    words = [word for (word,) in en.execute("SELECT word FROM %s WHERE mid = %s", (AsIs(str_cid(cid)+"words"),mid)).fetchall()]
+    mid_slice = mid_w[:min(5, len(mid_w) - 1)]
+    words = []
+    for (mid,) in mid_slice:
+        words += [word for (word,) in en.execute("SELECT word FROM %s WHERE mid = %s", (AsIs(str_cid(cid)+"words"),mid)).fetchall()]
     return words
 
 # They call me Bobby Tables
