@@ -41,6 +41,7 @@ def index():
     if request.method == 'POST':
         print("FOOOOOOO")
         print(request.form['to_chat'])
+        dbopsAttempt.read_message(request.form['to_chat'], cas.username)
         return render_template("index.html", username=cas.username, to_chat=request.form['to_chat'])#render_template('index.html')
 
 #@app.route('/')
@@ -79,7 +80,7 @@ def on_confirm(tok, username, chat_name):
     io.emit('clear', room=request.sid)
     uids.append(dbopsAttempt.update_user_table("foo", username))
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat_name)): ## THIS HAS TO BE EVENTUALLY CHANGED
-        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTN
+        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTN
     io.emit('confirm', dbopsAttempt.get_chat_name(chat_name), room=request.sid)
 
 @io.on('restrict')
@@ -96,14 +97,14 @@ def on_restrict(chat, *words):
             max_cmp = closeness
     print(dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)))
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)):
-        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTNio.emit(
+        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTNio.emit(
     io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
 
 @io.on('unrestrict')
 def on_unrestrict(chat):
     io.emit('clear', room=request.sid)
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat)):
-        io.emit('chat message', data=(u, str(g) + "| " + msg), room=request.sid) ## ATTNio.emit(
+        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTNio.emit(
     io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
 
 @io.on('disconnect')

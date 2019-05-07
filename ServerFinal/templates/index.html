@@ -5,8 +5,8 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form { background: rgb(210,190,180); padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; background:rgb(240,230,210);}
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
@@ -17,8 +17,8 @@
   <body>
     <ul id="token"></ul>
     <button id="new_chat"><-</button><button id="change_name">Rename</button><button id="restrict">Subject</button>
-    <div class="w3-card-4">
-      <header class="w3-container w3-light-grey">
+    <div class="w3-card-4" style="background:rgb(210,190,180);">
+      <header class="w3-container" style="background:rgb(200,180,170);">
         <h3 id="cur_chat"></h3>
       </header>
       <div class="w3-container">
@@ -68,9 +68,9 @@
 
       function formatMessage(user, msg, mine) {
           if (mine)
-              return "<div class=\"w3-row\"><div class=\"w3-panel w3-third\"></div><div class=\"w3-panel w3-light-blue w3-round-xlarge w3-rest\">" + user + ": " + msg + "</div></div>";
+              return "<div class=\"w3-row\"><div class=\"w3-panel w3-third\"></div><div class=\"w3-panel w3-light-blue w3-round-xlarge w3-rest w3-padding-16 w3-mobile\">" + user + ": " + msg + "</div></div>";
           else
-              return "<div class=\"w3-row\"><div class=\"w3-panel w3-twothird w3-light-grey w3-round-xlarge\">" + user + ": " + msg + "</div></div>";
+              return "<div class=\"w3-row\"><div class=\"w3-panel w3-twothird w3-light-grey w3-round-xlarge w3-padding-16 w3-mobile\">" + user + ": " + msg + "</div></div>";
       }
 
       function checkFormatLink(x) {
@@ -78,7 +78,8 @@
           var regex = new RegExp(exp);
 
           if (x.match(regex)) {
-              if (x.endsWith(".png") || x.endsWith(".jpg") || x.endsWith(".gif")) {
+              if (x.endsWith(".png") || x.endsWith(".jpg") || x.endsWith(".gif") ||
+                  x.endsWith(".JPG")) {
                   return "<img src=\"" + (x.startsWith("www") ? "http:////" + x : x) + "\" height=\"300\">" + "</img>";
               } else {
                   return "<a href=\"" + (x.startsWith("www") ? "http:////" + x : x) + "\">" + x + "</a>";  

@@ -3,26 +3,76 @@
   <head>
     <title>Tiger Message!</title>
     <style>
-      form button { width: 100%; background: rgb(120, 120, 140); border: none; padding: 10px; }
+      body { font: 13px Helvetica, Arial; }
+      form button { width: 100%; background: rgb(230, 230, 230); border: solid; padding: 10px; }
+    </style>
+    <style>
+      /* Split the screen in half */
+      .splitl {
+          height: 100%;
+          width: 20%;
+          position: fixed;
+          z-index: 1;
+          top: 0;
+          overflow-x: hidden;
+          padding-top: 20px;
+      }
+
+      .splitr {
+          height: 100%;
+          width: 80%;
+          position: fixed;
+          z-index: 1;
+          top: 0;
+          overflow-x: hidden;
+          padding-top: 20px;
+      }
+
+      /* Control the left side */
+      .left {
+          left: 0;
+          background-color: rgb(200,180,170);
+      }
+      
+      /* Control the right side */
+      .right {
+          right: 0;
+          background-color: rgb(210,190,180);
+      }
+
+      /* If you want the content centered horizontally and vertically */
+      .centered {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+      }
+
     </style>
   </head>
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <body>
-    <button id="new_chat">+</button>
+    <div class="splitl left">
     <div id="chatlist">
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <div class="w3-card-4" style="overflow:auto;height:95vh">
-      <header class="w3-container w3-light-grey">
+      <header class="w3-container w3-orange">
         <h3 id="cur_chat">Pick a Chat To Message In</h3>
       </header>
-      <div class="w3-container">
-        {% for id,name in mah_chats %}
+      <button id="new_chat">+</button>
+      <div class="w3-container" style="overflow:auto;height:85vh;">
+        {% for id,name,read,last in mah_chats %}
         <form method="post" action="">
           <input type="hidden" name="to_chat" value="{{id}}">
           <button type="submit" name="submit_{{id}}" value="Submit" class="link-button">
-            {{name}}
+            {% if read %}
+            {{name}} <p> {{last}}
+            {% else %}
+            {{name}}    * <p> {{last}}
+            {% endif %}
           </button>
         </form>
         <p>
@@ -42,9 +92,65 @@
           });
 
           socket.on('refresh', function() {
-              location.href = "http://localhost:5000";// "https://tmessage.herokuapp.com/"; // ATTN this is terrible
+              location.href = "https://tmessage.herokuapp.com/";// "http://localhost:5000";// "https://tmessage.herokuapp.com/";
           });
       });
     </script>
+    </div>
+    <div class="splitr right">
+      <header class="w3-container w3-center w3-mobile w3-orange">
+        <h1 id="cur_chat">About Tiger Message</h1>
+      </header>
+      <p><p><p>
+        <div class="w3-container w3-center w3-mobile" width="70%">
+          Tiger Message is a princeton-based chat app that attempts
+          to increase accessibility and useability. As it is
+          available to all Princeton students and faculty, it isn't
+          necessary to have accounts in various other messaging
+          services to get started.
+        </div>
+
+        <br>
+        <header class="w3-center w3-mobile">
+          <h2>Extra Features</h2>
+        </header>
+        <div class="w3-container w3-center w3-mobile" width="70%">
+          <ul>
+            <li>Subject Separation: Use the "restrict" button to limit chats to categories related to a provided subject.</li>
+            <li>Image Rendering: Post a link to an image ending with .jpg, .png, or .gif and it will render in the chat.</li>
+          </ul>
+        </div>
+
+        <br><br>
+        <header class="w3-center w3-mobile">
+          <h2>About The Developers</h2>
+        </header>
+      <div class="w3-row w3-mobile" height="100px">
+        <div style="padding:15px;" class="w3-col s4 w3-mobile"><img src="{{url_for('static', filename='NLG.png')}}" width="100%" ></img><p> <div class="w3-container w3-center"><header><h4><b>Nathan Lovett-Genovese</b></h4></header>Front/Backend<p>Computer Science major from the class of '21. Enjoys long coding sessions on the beach at sunset.</div></div>
+        <div style="padding:15px;" class="w3-col s4 w3-mobile"><img src="{{url_for('static', filename='nebil.jpg')}}" width="100%"></img><p><div class="w3-container w3-center"><header><h4><b>Nebil Ibrahim</b></h4></header>Backend<p><a href="https://www.linkedin.com/in/nebil-ibrahim-195582ba/">LinkedIn</a><p>I'm a Computer Science Major from the Class of '20. I am a photographer and occasional powerlifter.</div></div>
+        <div style="padding:15px;" class="w3-col s4 w3-mobile"><img src="{{url_for('static', filename='emma.png')}}" width="100%"></img><p> <div class="w3-container w3-center"><header><h4><b>Emma Thomas</b></h4></header>Frontend<p>Computer Science major from the class of '20. </div></div>
+      </div>
+
+      <br><p><p>
+        <header class="w3-center w3-mobile">
+          <h4><b>Acknowledgements</b></h4>
+        </header>
+
+        <div class="w3-center w3-mobile">
+          Christopher Moretti: Our Project Advisor
+          <p>
+            Brian Kernighan: Our Lecturer <p>
+            We used the Flask framework as well as nltk, spaCy, and WordNet.
+            
+        </div>
+          <br>
+          <br>
+          <br>
+          <br>
+          <br>
+          <br>
+          <div class="w3-row w3-mobile w3-center"><img src="{{url_for('static', filename='bwkmorettiParty.JPG')}}" width="50%"></img></div>
+          <br>
+    </div>
   </body>
 </html>
