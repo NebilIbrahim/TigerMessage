@@ -12,10 +12,14 @@ en = 0
 def next_cid():
     global en
 
-    (cur_cid,) = en.execute("SELECT cid FROM cur_cid").fetchone()
-    en.execute("UPDATE cur_cid SET cid = cid + 1 WHERE cid = %s", (cur_cid,))
-    print(cur_cid, "***")
-    return cur_cid
+    cidW = en.execute("SELECT cid FROM chats_table ORDER BY cid DESC").fetchone()
+    if cidW is None:
+        return 0
+    (cur_cid,) = cidW
+    #(cur_cid,) = en.execute("SELECT cid FROM cur_cid").fetchone()
+    #en.execute("UPDATE cur_cid SET cid = cid + 1 WHERE cid = %s", (cur_cid,))
+    #print(cur_cid, "***")
+    return cur_cid + 1  # + 0
 
 # Make a new chat table whose name is its chat id (cid) and whose columns are
 # message id, message, sender, and timestamp
@@ -46,6 +50,7 @@ def setup_chat_table(chatName, membersIds):
 
     # Add each member chat pair Ex: (314159, QuadChat, Nebil Ibrahim) (314159, QuadChat, Emmerson) ...
     for i in range(0, len(membersIds)):
+        print(membersIds[i])
         #memberName = (AsIs(membersNames[i]),)
         #memberId = (AsIs(membersIds[i]),)
         add_chat(cid, membersIds[i])
@@ -266,7 +271,7 @@ def init_db(engine):
 
     en = engine
     
-    clear_db()
+    #clear_db()
 
     en.execute("CREATE SCHEMA IF NOT EXISTS public")
     en.execute("CREATE TABLE IF NOT EXISTS cur_cid (cid INTEGER)")

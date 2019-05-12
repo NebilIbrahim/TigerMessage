@@ -88,11 +88,12 @@
               var membersStr = prompt ("NetID's of members? (e.g. \'johnd, janed, ...\')", "");
               var members = membersStr.split(",").map(function (s) {return s.trim()});
               members.push(username)
+
               socket.emit('new chat', name, ...members);
           });
 
           socket.on('refresh', function() {
-              location.href = "https://tmessage.herokuapp.com/";// "http://localhost:5000";// "https://tmessage.herokuapp.com/";
+              window.location.reload(false);
           });
       });
     </script>

@@ -1,0 +1,113 @@
+\documentclass[12pt]{article}
+\usepackage{setspace}
+\usepackage{dirtree}
+\doublespacing
+
+\begin{document}
+\section*{For Future Developers}
+
+\subsection*{File Architecture and Important Files}
+
+The main files appear as follows:
+
+\dirtree{%
+  .1 Server.
+  .2 index.py.
+  .2 dbopsAttempt.py.
+  .2 mlops.py.
+  .2 requirements.txt.
+  .2 nltk.txt.
+  .2 Procfile.
+  .2 templates.
+  .3 index.html.
+  .3 chats.html.
+  .2 static.
+  .3 Image Files.
+}
+
+\subsubsection*{index.py}
+index.py is the main server code. The bulk of it dedicated to the
+background of the server setup and the socketIO event-handling code.
+While many things in each event can be changed while keeping the
+code modular, it is important that the socketIO interactions are
+either unchanged, or changed in both front/backend.
+
+\subsubsection*{index.html}
+index.html is the main chat page. It sends, receives, and renders
+messages, as well as prepping links and images with the appropriate
+HTML tags. This is the other end of most of the SocketIO emits/ons
+in \texttt{index.py}.
+
+\subsubsection*{dbopsAttempt.py}
+This is where all of the database code is handled. After it is
+initialized with a database engine by flask, it handles all the
+direct communication with the database.
+
+\subsubsection*{mlops.py}
+This file contains all of the code for the subject analysis
+component of Tiger Message. It contains code to pull out objects and
+subjects in sentences in addition to code which takes lists of these
+and calculates a ``closeness'' between 0 and 1 using WordNet.
+
+\subsubsection*{chats.html}
+This contains the ``about'' page and the list of a user's chats.
+There is one socketio event parsed by this site, which simply
+refreshes the chat list.
+
+\subsubsection*{Other Files}
+The other files highlighted above are dependency information and run
+commands for Heroku to correctly parse and run the server.
+
+\subsection*{Key SocketIO Workflows}
+
+There are several socketIO events passed back and forth between the
+server and the client 
+
+\subsubsection*{User Connects}
+When a user connects, they go through the following process,
+exchanging user information back and forth with the server.
+\begin{center}
+  \begin{tabular}{lcr}
+    Client & & Server\\
+    \hline
+    connect & $\rightarrow$ & \\
+           & $\leftarrow$ & token\\
+    confirm & $\rightarrow$ \\
+           &$\leftarrow$& not member\\
+           & or &\\
+           &$\leftarrow$& chat message.
+  \end{tabular}
+\end{center}
+
+\subsubsection*{User Sends a Message}
+If client1 sends a message in a chat with client2, the message is
+processed by the server, and then distributed to all users in the
+selected chat.
+\begin{center}
+  \begin{tabular}{lcccr}
+    Client1 && Server && Client2\\
+    \hline
+    chat message &$\rightarrow$&&&\\
+    &$\leftarrow$& chat message & $\rightarrow$&
+  \end{tabular}
+\end{center}
+
+\subsubsection*{Changing a Chat's Name}
+If client1 changes the name of a shared chat with client2, the
+change is processed by the server and then confirmation to re-check
+the chat's name is sent to each website.
+\begin{center}
+  \begin{tabular}{lcccr}
+    Client1 && Server && Client2\\
+    \hline
+    change cname & $\rightarrow$& &&\\
+    & $\leftarrow$ & confirm & $\rightarrow$&
+  \end{tabular}
+\end{center}
+
+\subsubsection*{Sigle Event Interactions}
+For certain things like restricting the messages to a subject,
+re-displaying all chat messages, reloading pages, there is just a
+single event that the server emits to all the necessary pages.
+
+\end{document}

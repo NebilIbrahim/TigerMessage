@@ -51,7 +51,6 @@ def index():
 #    return render_template("chats.html")
 
 clients = []
-usernames = []
 chat = []
 uids = []
 curToken = 0
@@ -72,16 +71,17 @@ def on_confirm(tok, username, chat_name):
     print(dbopsAttempt.is_member(chat_name, username))
     if not dbopsAttempt.is_member(chat_name, username): # ATTN check member
         io.emit('not member', room=request.sid)
+        print("NOT MEMBER")
         return None
-    print("WE GOOD")
-    clients.append(request.sid)
-    usernames.append(username)
-    chat.append(chat_name)
-    io.emit('clear', room=request.sid)
-    uids.append(dbopsAttempt.update_user_table("foo", username))
-    for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat_name)): ## THIS HAS TO BE EVENTUALLY CHANGED
-        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTN
-    io.emit('confirm', dbopsAttempt.get_chat_name(chat_name), room=request.sid)
+    else:
+        print("WE GOOD")
+        clients.append(request.sid)
+        chat.append(chat_name)
+        io.emit('clear', room=request.sid)
+        uids.append(dbopsAttempt.update_user_table("foo", username))
+        for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat_name)): ## THIS HAS TO BE EVENTUALLY CHANGED
+            io.emit('chat message', data=(u, msg, False), room=request.sid) ## ATTN
+        io.emit('confirm', dbopsAttempt.get_chat_name(chat_name), room=request.sid)
 
 @io.on('restrict')
 def on_restrict(chat, *words):
@@ -97,14 +97,14 @@ def on_restrict(chat, *words):
             max_cmp = closeness
     print(dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)))
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_subject_messages(str(chat), str(restrict_to)):
-        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTNio.emit(
+        io.emit('chat message', data=(u, msg, False), room=request.sid) ## ATTNio.emit(
     io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
 
 @io.on('unrestrict')
 def on_unrestrict(chat):
     io.emit('clear', room=request.sid)
     for (mid, msg, u, tsmp, g) in dbopsAttempt.get_messages(str(chat)):
-        io.emit('chat message', data=(u, msg), room=request.sid) ## ATTNio.emit(
+        io.emit('chat message', data=(u, msg, False), room=request.sid) ## ATTNio.emit(
     io.emit('confirm', dbopsAttempt.get_chat_name(chat), room=request.sid)
 
 @io.on('disconnect')
@@ -130,8 +130,8 @@ def on_message(msg, user, which_chat):
     #    io.emit('chat message', data=(u, str(g) + "| " + mesg), room=request.sid) ## ATTN
     # PROBLEM
     for i in range(len(clients)):
-        if chat[i] == which_chat:# and clients[i] != request.sid:
-            io.emit('chat message', data=(user, msg), room=clients[i])
+        if chat[i] == which_chat:
+            io.emit('chat message', data=(user, msg, True), room=clients[i])
 
 @io.on('new chat')
 def on_new_chat(cname, *members):
